@@ -2,7 +2,7 @@
 title: "Análise de Componentes Principais - PCA"
 author: "Vander Fillipe de Souza"
 institute: "UFLA"
-date: "2019-09-25"
+date: "2019-10-02"
 output:
   xaringan::moon_reader:
     css: ["default", "metropolis", "metropolis-fonts"]
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 # Motivação
 
-### Entender como funciona da análise de componentes principais na prática.
+### Entender como funciona a análise de componentes principais na prática.
 
 ### Primeiro com um exemplo simple...
 
@@ -54,19 +54,7 @@ knitr::include_graphics("https://media.giphy.com/media/98gYhE06o31GE/giphy.gif")
 
 # PCA
 
-.font150[* Componentes principais são a estrutura subjacente nos dados.]
-
---
-
-.font150[* Eigenvectors (Autovetores): é uma direção, como "vertical" ou "30 graus"]
-
---
-
-.font150[* São as direções em que há maior variação nos dados.]
-
---
-
-.font150[* Eigenvalues (Autovalores): um número que informa a quantidade de variação existente nos dados nessa direção.]
+### é um procedimento matemático que utiliza uma transformação ortogonal para converter um conjunto de observações de variáveis possivelmente correlacionadas num conjunto de valores de variáveis linearmente não correlacionadas chamadas de componentes principais.
 
 ---
 
@@ -148,6 +136,24 @@ str(dados)
 pca <- prcomp(dados, center = TRUE,scale. = TRUE)
 pca
 ```
+
+---
+
+# Autovalores e Autovetores
+
+.font150[* Componentes principais são a estrutura subjacente nos dados.]
+
+--
+
+.font150[* Eigenvectors (Autovetores): é uma direção, como "vertical" ou "30 graus"]
+
+--
+
+.font150[* São as direções em que há maior variação nos dados.]
+
+--
+
+.font150[* Eigenvalues (Autovalores): um número que informa a quantidade de variação existente nos dados nessa direção.]
 
 ---
 
@@ -241,8 +247,9 @@ Conjunto de dados completo.
 
 ---
 
-##Obrigado!
+# Conclusão 
 
+## A contribuição de uma variável específica (ou de um conjunto de variáveis específicas) contribui consideravelmente para o resultado final da representação dos componentes principais.  
 ---
 
 class: inverse, center
@@ -257,4 +264,5 @@ vanderfsouza@gmail.com
 
 [github.com/vanderfsouza](https://github.com/vanderfsouza)
 
+.font200[Obrigado!]
 
