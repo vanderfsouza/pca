@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Análise de Componentes Principais - PCA</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Vander Fillipe de Souza" />
+    <meta name="date" content="2019-10-02" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Análise de Componentes Principais - PCA
+### Vander Fillipe de Souza
+### UFLA
+### 2019-10-02
+
+---
+
+
+
+
+# Motivação
+
+### Entender como funciona a análise de componentes principais na prática.
+
+### Primeiro com um exemplo simple...
+
+### Como os exemplos deste trabalho:
+(https://www.stat.cmu.edu/~cshalizi/350/2008/lectures/14/lecture-14.pdf)
+
+### ... e posteriormente com exemplos na área de pesquisa.
+---
+
+# PCA
+
+### Análise de Componentes Principais (Principal Component Analysis - PCA) é um dos métodos de análise multivariada mais populares. 
+
+&lt;img src="https://miro.medium.com/max/414/1*uSQooRdyLd2aZsadN9Sb0w.gif" style="display: block; margin: auto;" /&gt;
+
+---
+
+# PCA
+
+### O objetivo do PCA é resumir as informações contidas em dados contínuos (isto é, quantitativos) multivariados, reduzindo a dimensionalidade dos dados sem perder informações importantes.
+
+&lt;img src="https://media.giphy.com/media/98gYhE06o31GE/giphy.gif" style="display: block; margin: auto;" /&gt;
+
+---
+
+# PCA
+
+### é um procedimento matemático que utiliza uma transformação ortogonal para converter um conjunto de observações de variáveis possivelmente correlacionadas num conjunto de valores de variáveis linearmente não correlacionadas chamadas de componentes principais.
+
+---
+
+# Iniciando a análise
+
+### Carrega dados e pacotes
+
+
+```r
+setwd("C:\\Users\\vande\\Desktop\\Data_Science\\PCA")
+require(readxl)
+```
+
+```
+## Loading required package: readxl
+```
+
+```r
+#brasil &lt;- read_excel("dados_brasil.xlsx", sheet = "Brasil")
+brasil &lt;- read.table("brasil.txt", h=T)
+uf&lt;-brasil[,1]
+regiao&lt;-brasil[,2]
+coordenadas = data.frame(brasil$Latitude,brasil$Longitude)
+row.names(coordenadas) = uf
+```
+
+---
+
+
+```
+## 'data.frame':	27 obs. of  17 variables:
+##  $ UF                  : Factor w/ 27 levels "AC","AL","AM",..: 1 2 3 4 5 6 7 8 9 10 ...
+##  $ Regiao              : Factor w/ 5 levels "Centro-Oeste",..: 3 2 3 3 2 2 1 4 1 2 ...
+##  $ Area                : num  164122 27768 1570746 142815 564693 ...
+##  $ Populacao           : int  795145 3327551 3893763 756500 15150143 8867448 2867869 3894899 6551322 6861924 ...
+##  $ Densidade           : num  4.3 108.61 2.05 4.16 24.46 ...
+##  $ PIB                 : int  13622000 46364000 86560000 13861000 245025000 130621000 215613000 120363000 173632000 78475000 ...
+##  $ PIB_per_capita      : num  16953 13878 21979 18080 16116 ...
+##  $ IDH                 : num  0.663 0.631 0.674 0.708 0.66 0.682 0.824 0.74 0.735 0.639 ...
+##  $ Alfabetizacao       : num  0.87 0.81 0.93 0.95 0.87 0.85 0.97 0.94 0.94 0.83 ...
+##  $ Mortalidade_infantil: num  17 19.5 18.2 23.2 17.3 14.4 10.5 8.8 14.9 21.3 ...
+##  $ Expectativa_de_vida : num  73.9 71.6 71.9 73.9 73.5 73.8 78.1 78.2 74.2 70.6 ...
+##  $ Longitude           : num  -70.5 -35.7 -61.7 -51.8 -38.5 ...
+##  $ Latitude            : num  -8.77 -9.71 -3.07 1.41 -12.96 ...
+##  $ T_max_med           : num  31.5 28.9 31.4 30.7 28.2 30.1 26.6 28.5 29.8 30.4 ...
+##  $ T_med               : num  24.8 24.8 26.7 26.6 25.3 26.6 20.6 24.2 23.2 26.1 ...
+##  $ T_min_med           : num  19.8 21.6 23.3 23.3 22.7 23.6 16.1 21.3 17.7 23.3 ...
+##  $ Precip_anual        : num  1948 2070 2307 2561 2144 ...
+```
+
+---
+
+# Plotando dados de latitude e longitude
+
+
+```r
+plot(brasil$Longitude, brasil$Latitude)
+text(brasil$Longitude, brasil$Latitude, labels=uf, cex= 0.7, pos=3)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+A ideia seria testar se as informações de latitude e longitude seriam suficientes para agrupar as macroregiões brasileiras.
+
+
+```r
+library(ggfortify)
+```
+
+```
+## Warning: package 'ggfortify' was built under R version 3.5.3
+```
+
+```
+## Loading required package: ggplot2
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.5.3
+```
+
+```r
+set.seed(1)
+```
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+
+```r
+autoplot(kmeans(coordenadas, 5), label= T,data = coordenadas)+scale_x_reverse()
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+É possível observar que o agrupamento baseado apenas na latitude e longitude não correspondem aos da realidade.
+
+&lt;img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Brazil%2C_administrative_divisions_%28regions%29_-_Nmbrs_-_colored.svg/800px-Brazil%2C_administrative_divisions_%28regions%29_-_Nmbrs_-_colored.svg.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+---
+
+# PCA dados do Brasil 
+
+Sem informações de latitude, longitude e clima
+
+
+```r
+dados&lt;-brasil[,3:11]
+str(dados)
+```
+
+```
+## 'data.frame':	27 obs. of  9 variables:
+##  $ Area                : num  164122 27768 1570746 142815 564693 ...
+##  $ Populacao           : int  795145 3327551 3893763 756500 15150143 8867448 2867869 3894899 6551322 6861924 ...
+##  $ Densidade           : num  4.3 108.61 2.05 4.16 24.46 ...
+##  $ PIB                 : int  13622000 46364000 86560000 13861000 245025000 130621000 215613000 120363000 173632000 78475000 ...
+##  $ PIB_per_capita      : num  16953 13878 21979 18080 16116 ...
+##  $ IDH                 : num  0.663 0.631 0.674 0.708 0.66 0.682 0.824 0.74 0.735 0.639 ...
+##  $ Alfabetizacao       : num  0.87 0.81 0.93 0.95 0.87 0.85 0.97 0.94 0.94 0.83 ...
+##  $ Mortalidade_infantil: num  17 19.5 18.2 23.2 17.3 14.4 10.5 8.8 14.9 21.3 ...
+##  $ Expectativa_de_vida : num  73.9 71.6 71.9 73.9 73.5 73.8 78.1 78.2 74.2 70.6 ...
+```
+
+---
+
+# PCA dados do Brasil 
+
+
+```r
+pca &lt;- prcomp(dados, center = TRUE,scale. = TRUE)
+pca
+```
+
+```
+## Standard deviations (1, .., p=9):
+## [1] 2.2532213 1.1955772 1.0904638 0.8356995 0.6222667 0.3154603 0.2815470
+## [8] 0.1546965 0.1270953
+## 
+## Rotation (n x k) = (9 x 9):
+##                              PC1         PC2         PC3          PC4
+## Area                  0.09634241 -0.49883043  0.61498661 -0.283014845
+## Populacao            -0.26714987 -0.58955443 -0.33037804 -0.007571715
+## Densidade            -0.28885874  0.27736618 -0.30899501 -0.654529177
+## PIB                  -0.31467570 -0.49827646 -0.29581340 -0.092649267
+## PIB_per_capita       -0.39072365  0.20629252  0.17932597 -0.348368747
+## IDH                  -0.41478877  0.15027948  0.20344823  0.004387275
+## Alfabetizacao        -0.34060175 -0.03869251  0.50381225  0.001915897
+## Mortalidade_infantil  0.37222569 -0.04753014  0.02970777 -0.436398589
+## Expectativa_de_vida  -0.39700466  0.09739408  0.03741685  0.413552300
+##                              PC5         PC6         PC7          PC8
+## Area                  0.48039152 -0.09934799  0.08754659 -0.020771287
+## Populacao            -0.03106895  0.02406253  0.08337763 -0.571019710
+## Densidade             0.30160898  0.29337576  0.34812880 -0.002834564
+## PIB                  -0.22221602 -0.08507825 -0.15826666  0.603387842
+## PIB_per_capita        0.03108003 -0.47047583 -0.43024380  0.100102843
+## IDH                  -0.27195069 -0.11093957 -0.18761307 -0.501752398
+## Alfabetizacao        -0.43246130  0.53716151  0.22628834  0.164493347
+## Mortalidade_infantil -0.57874922 -0.41063668  0.40052358 -0.062160557
+## Expectativa_de_vida   0.17610845 -0.45323643  0.63812838  0.129313878
+##                               PC9
+## Area                 -0.186650807
+## Populacao             0.370526544
+## Densidade            -0.132299904
+## PIB                  -0.332966706
+## PIB_per_capita        0.483545305
+## IDH                  -0.625089611
+## Alfabetizacao         0.273556479
+## Mortalidade_infantil  0.002534685
+## Expectativa_de_vida   0.010431190
+```
+
+---
+
+# Autovalores e Autovetores
+
+.font150[* Componentes principais são a estrutura subjacente nos dados.]
+
+--
+
+.font150[* Eigenvectors (Autovetores): é uma direção, como "vertical" ou "30 graus"]
+
+--
+
+.font150[* São as direções em que há maior variação nos dados.]
+
+--
+
+.font150[* Eigenvalues (Autovalores): um número que informa a quantidade de variação existente nos dados nessa direção.]
+
+---
+
+# PCA dados do Brasil 
+
+
+```r
+plot(pca)
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# PCA dados do Brasil 
+
+
+```r
+library(ggbiplot)
+```
+
+```
+## Loading required package: plyr
+```
+
+```
+## Loading required package: scales
+```
+
+```
+## Loading required package: grid
+```
+
+```
+## 
+## Attaching package: 'ggbiplot'
+```
+
+```
+## The following object is masked from 'package:ggfortify':
+## 
+##     ggbiplot
+```
+
+```r
+ggbiplot(pca, labels=uf) + coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3)) 
+```
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-13-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# PCA dados do Brasil 
+
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Dados + Coordenadas Geográficas
+
+
+
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+Incluindo dados de latitude e longitude.
+
+---
+
+# Dados + Clima
+
+
+
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" /&gt;
+
+Incluindo dados de clima, mas sem os dados de latitude e longitude.
+
+---
+
+# Coordenadas + Clima
+
+
+
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-20-1.png" style="display: block; margin: auto;" /&gt;
+
+Apenas dados de latitude, longitude e clima.
+
+---
+
+# Dados + Coordenadas + Clima
+
+
+
+
+```
+## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
+```
+
+&lt;img src="index_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" /&gt;
+
+Conjunto de dados completo.
+
+---
+
+# Conclusão 
+
+## A contribuição de uma variável específica (ou de um conjunto de variáveis específicas) contribui consideravelmente para o resultado final da representação dos componentes principais.  
+---
+
+class: inverse, center
+
+# Contato
+
+.font200[e-mail]
+
+vanderfsouza@gmail.com
+
+.font200[Materiais]
+
+[github.com/vanderfsouza](https://github.com/vanderfsouza)
+
+.font200[Obrigado!]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

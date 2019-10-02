@@ -1,0 +1,268 @@
+---
+title: "Análise de Componentes Principais - PCA"
+author: "Vander Fillipe de Souza"
+institute: "UFLA"
+date: "2019-10-02"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(
+  fig.align = "center", 
+  echo = FALSE
+)
+```
+
+# Motivação
+
+### Entender como funciona a análise de componentes principais na prática.
+
+### Primeiro com um exemplo simple...
+
+### Como os exemplos deste trabalho:
+(https://www.stat.cmu.edu/~cshalizi/350/2008/lectures/14/lecture-14.pdf)
+
+### ... e posteriormente com exemplos na área de pesquisa.
+---
+
+# PCA
+
+### Análise de Componentes Principais (Principal Component Analysis - PCA) é um dos métodos de análise multivariada mais populares. 
+
+```{r}
+knitr::include_graphics("https://miro.medium.com/max/414/1*uSQooRdyLd2aZsadN9Sb0w.gif")
+```
+
+---
+
+# PCA
+
+### O objetivo do PCA é resumir as informações contidas em dados contínuos (isto é, quantitativos) multivariados, reduzindo a dimensionalidade dos dados sem perder informações importantes.
+
+```{r}
+knitr::include_graphics("https://media.giphy.com/media/98gYhE06o31GE/giphy.gif")
+```
+
+---
+
+# PCA
+
+### é um procedimento matemático que utiliza uma transformação ortogonal para converter um conjunto de observações de variáveis possivelmente correlacionadas num conjunto de valores de variáveis linearmente não correlacionadas chamadas de componentes principais.
+
+---
+
+# Iniciando a análise
+
+### Carrega dados e pacotes
+
+```{r echo=TRUE}
+setwd("C:\\Users\\vande\\Desktop\\Data_Science\\PCA")
+require(readxl)
+#brasil <- read_excel("dados_brasil.xlsx", sheet = "Brasil")
+brasil <- read.table("brasil.txt", h=T)
+uf<-brasil[,1]
+regiao<-brasil[,2]
+coordenadas = data.frame(brasil$Latitude,brasil$Longitude)
+row.names(coordenadas) = uf
+```
+
+---
+
+```{r}
+str(brasil)
+```
+
+---
+
+# Plotando dados de latitude e longitude
+
+```{r echo=TRUE}
+plot(brasil$Longitude, brasil$Latitude)
+text(brasil$Longitude, brasil$Latitude, labels=uf, cex= 0.7, pos=3)
+```
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+A ideia seria testar se as informações de latitude e longitude seriam suficientes para agrupar as macroregiões brasileiras.
+
+```{r, echo=T}
+library(ggfortify)
+set.seed(1)
+```
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+```{r, echo=T}
+autoplot(kmeans(coordenadas, 5), label= T,data = coordenadas)+scale_x_reverse()
+```
+
+---
+
+# Utilizando K-means para gerar 5 grupos 
+
+É possível observar que o agrupamento baseado apenas na latitude e longitude não correspondem aos da realidade.
+
+```{r, out.width="50%"}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Brazil%2C_administrative_divisions_%28regions%29_-_Nmbrs_-_colored.svg/800px-Brazil%2C_administrative_divisions_%28regions%29_-_Nmbrs_-_colored.svg.png")
+```
+
+---
+
+# PCA dados do Brasil 
+
+Sem informações de latitude, longitude e clima
+
+```{r, echo=T}
+dados<-brasil[,3:11]
+str(dados)
+```
+
+---
+
+# PCA dados do Brasil 
+
+```{r, echo=T}
+pca <- prcomp(dados, center = TRUE,scale. = TRUE)
+pca
+```
+
+---
+
+# Autovalores e Autovetores
+
+.font150[* Componentes principais são a estrutura subjacente nos dados.]
+
+--
+
+.font150[* Eigenvectors (Autovetores): é uma direção, como "vertical" ou "30 graus"]
+
+--
+
+.font150[* São as direções em que há maior variação nos dados.]
+
+--
+
+.font150[* Eigenvalues (Autovalores): um número que informa a quantidade de variação existente nos dados nessa direção.]
+
+---
+
+# PCA dados do Brasil 
+
+```{r, echo=T}
+plot(pca)
+```
+
+---
+
+# PCA dados do Brasil 
+
+```{r, echo=T}
+library(ggbiplot)
+ggbiplot(pca, labels=uf) + coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3)) 
+```
+
+---
+
+# PCA dados do Brasil 
+
+```{r}
+ggbiplot(pca, obs.scale = 1, var.scale = 1, groups = regiao, ellipse = TRUE,labels=uf)+
+       coord_cartesian(xlim = c(-6, 6), ylim = c(-4, 4))
+```
+
+---
+
+# Dados + Coordenadas Geográficas
+
+```{r echo=F}
+dados_coord<-brasil[,3:13] # com latitude e longitude, mas sem clima 
+pca_coord <- prcomp(dados_coord, center = TRUE,scale. = TRUE)
+```
+
+```{r}
+ggbiplot(pca_coord, obs.scale = 1, var.scale = 1, groups = regiao, ellipse = TRUE,labels=uf)+
+       coord_cartesian(xlim = c(-6, 6), ylim = c(-4, 4))
+```
+
+Incluindo dados de latitude e longitude.
+
+---
+
+# Dados + Clima
+
+```{r echo=F}
+dados_clima<-brasil[,c(3:11,14:17)] # sem latitude e longitude, com clima
+pca_clima <- prcomp(dados_clima, center = TRUE,scale. = TRUE)
+```
+
+```{r}
+ggbiplot(pca_clima, obs.scale = 1, var.scale = 1, groups = regiao, ellipse = TRUE,labels=uf)+
+       coord_cartesian(xlim = c(-6, 6), ylim = c(-4, 4))
+```
+
+Incluindo dados de clima, mas sem os dados de latitude e longitude.
+
+---
+
+# Coordenadas + Clima
+
+```{r echo=F}
+coord_clima<-brasil[,12:17] # apenas latitude, longitude e clima
+pca_coord_clima <- prcomp(coord_clima, center = TRUE,scale. = TRUE)
+```
+
+```{r}
+ggbiplot(pca_coord_clima, obs.scale = 1, var.scale = 1, groups = regiao, ellipse = TRUE,labels=uf)+
+       coord_cartesian(xlim = c(-6, 6), ylim = c(-4, 4))
+```
+
+Apenas dados de latitude, longitude e clima.
+
+---
+
+# Dados + Coordenadas + Clima
+
+```{r echo=F}
+dados_completo<-brasil[,3:ncol(brasil)] # completo
+pca_completo <- prcomp(dados_completo, center = TRUE,scale. = TRUE)
+```
+
+```{r}
+ggbiplot(pca_completo, obs.scale = 1, var.scale = 1, groups = regiao, ellipse = TRUE,labels=uf)+
+       coord_cartesian(xlim = c(-6, 6), ylim = c(-4, 4))
+```
+
+Conjunto de dados completo.
+
+---
+
+# Conclusão 
+
+## A contribuição de uma variável específica (ou de um conjunto de variáveis específicas) contribui consideravelmente para o resultado final da representação dos componentes principais.  
+---
+
+class: inverse, center
+
+# Contato
+
+.font200[e-mail]
+
+vanderfsouza@gmail.com
+
+.font200[Materiais]
+
+[github.com/vanderfsouza](https://github.com/vanderfsouza)
+
+.font200[Obrigado!]
+
